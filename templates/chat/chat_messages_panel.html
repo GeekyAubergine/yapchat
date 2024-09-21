@@ -8,6 +8,73 @@
   "chat/chat_message_input.html" %}
 
   <script>
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    // Encode an AudioBuffer into a WAV Blob
+    function audioBufferToWav(audioBuffer) {
+      const numberOfChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+
+      // Calculate size
+      const blockAlign = numberOfChannels * (bitDepth / 8);
+      const byteRate = sampleRate * blockAlign;
+      const bufferLength = audioBuffer.length * numberOfChannels * 2; // 16-bit PCM
+
+      // Create WAV file buffer
+      const wavBuffer = new ArrayBuffer(44 + bufferLength);
+      const view = new DataView(wavBuffer);
+
+      // Write WAV header
+      writeString(view, 0, "RIFF");
+      view.setUint32(4, 36 + bufferLength, true); // Chunk size
+      writeString(view, 8, "WAVE");
+      writeString(view, 12, "fmt ");
+      view.setUint32(16, 16, true); // Subchunk1 size (16 for PCM)
+      view.setUint16(20, format, true); // Audio format (1 for PCM)
+      view.setUint16(22, numberOfChannels, true); // Number of channels
+      view.setUint32(24, sampleRate, true); // Sample rate
+      view.setUint32(28, byteRate, true); // Byte rate
+      view.setUint16(32, blockAlign, true); // Block align
+      view.setUint16(34, bitDepth, true); // Bits per sample
+      writeString(view, 36, "data");
+      view.setUint32(40, bufferLength, true); // Data size
+
+      // Write PCM data
+      let offset = 44;
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          const sample = audioBuffer.getChannelData(channel)[i];
+          const intSample = Math.max(-1, Math.min(1, sample)); // Clamp sample value
+          view.setInt16(
+            offset,
+            intSample < 0 ? intSample * 0x8000 : intSample * 0x7fff,
+            true
+          ); // Convert to PCM
+          offset += 2;
+        }
+      }
+
+      // Return WAV Blob
+      return new Blob([view], { type: "audio/wav" });
+    }
+
+    async function convertToWav(blob) {
+      const audioContext = new AudioContext();
+      const arrayBuffer = await blob.arrayBuffer();
+
+      // Decode the WebM audio data
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      // Encode the audio data into WAV format
+      return audioBufferToWav(audioBuffer);
+    }
+
     const record = document.querySelector(".record");
     const stop = document.querySelector(".stop");
 
@@ -25,7 +92,10 @@
 
         // Success callback
         .then((stream) => {
-          const mediaRecorder = new MediaRecorder(stream);
+          const mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "audio/webm",
+            audioBitsPerSecond: 44100,
+          });
 
           record.onclick = () => {
             audioChunks = [];
@@ -51,15 +121,20 @@
           mediaRecorder.onstop = async (e) => {
             console.log("recorder stopped");
 
-            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-            const audioArrayBuffer = await audioBlob.arrayBuffer();
+            const bigBlob = new Blob(audioChunks, {
+              type: "audio/wemb",
+            });
+
+            const wavBlog = await convertToWav(bigBlob);
+
+            const audioArrayBuffer = await wavBlog.arrayBuffer();
 
             const uint8Array = new Uint8Array(audioArrayBuffer);
             const audioDataArray = Array.from(uint8Array);
 
             // Upload
             const formData = new FormData();
-            formData.append("audio", audioBlob, "audio.wav");
+            // formData.append("audio", audioBlob, "audio.wav");
             fetch("/api/chats/{{ chat_uuid }}/audio", {
               method: "POST",
               headers: {

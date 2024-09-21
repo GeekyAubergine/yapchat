@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use askama::Template;
 use axum::{
     extract::{Json, Path, State},
@@ -7,6 +9,7 @@ use axum::{
     Router,
 };
 use axum_extra::extract::CookieJar;
+use hound::WavWriter;
 use serde::Deserialize;
 use tokio_tungstenite::tungstenite::Message;
 use tracing::info;
@@ -155,6 +158,43 @@ async fn add_audio(
         ChatMessage::from_chat_uuid_sender_uuid_file_uuid(chat_uuid, user.uuid, Uuid::new_v4());
 
     let message = state.chat_message_repo().commit(message).await?.unwrap();
+
+    let file_uuid = message.file_uuid;
+
+    let mut writer = WavWriter::create(
+        format!("cdn/{}.wav", file_uuid.to_string()),
+        hound::WavSpec {
+            channels: 1,
+            sample_rate: 44100,
+            bits_per_sample: 16,
+            sample_format: hound::SampleFormat::Int,
+        },
+    )
+    .unwrap();
+
+    let data = payload.audio;
+
+    let data = &data[88..data.len()];
+
+    // Convert u8 array to i16 array
+    let normalised = data
+        .chunks(2)
+        .into_iter()
+        .map(|chunk| {
+            let mut bytes = [0u8; 2];
+            for (i, byte) in chunk.iter().enumerate() {
+                bytes[i] = *byte;
+            }
+            i16::from_le_bytes(bytes)
+        })
+        .collect::<Vec<i16>>();
+
+
+    for sample in normalised {
+        writer.write_sample(sample).unwrap();
+    }
+
+    info!("Audio written");
 
     // let value = ChatMessageTemplate { message };
 
