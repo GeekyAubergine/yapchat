@@ -4,6 +4,7 @@ use axum::{
     Router,
 };
 
+use crate::domain::models::ChatWithMetadata;
 use crate::prelude::*;
 use crate::{get_build_date, infrastructure::appstate::AppState, ResponseResult};
 
@@ -17,6 +18,7 @@ pub struct ChatTemplate {
     page_title: String,
     page_description: String,
     build_date: String,
+    // chats: Vec<ChatWithMetadata>,
 }
 
 async fn chat(State(sate): State<AppState>) -> ResponseResult<ChatTemplate> {

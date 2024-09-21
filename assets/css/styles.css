@@ -3,21 +3,38 @@
 @tailwind utilities;
 
 @layer components {
-    /* ---------------- Core ---------------- */
+  /* ---------------- Core ---------------- */
 
-    html {
-        font-size: 16px;
-    }
+  html {
+    font-size: 16px;
+  }
 
-    * {
-        font-family:'Segoe UI', Roboto,
-            'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
-            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-            'Noto Color Emoji';
-        font-display: swap;
-    }
+  * {
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+      sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+      "Noto Color Emoji";
+    font-display: swap;
+  }
 
-    body {
-        @apply bg-background dark:bg-background-dark;
-    }
+  body {
+    @apply bg-background text-text;
+  }
+
+  /* ---------------- Components ---------------- */
+
+  .chat_page {
+      @apply flex flex-row w-full;
+
+      .chat_list {
+
+      }
+
+      .chat_messages {
+
+      }
+  }
+
+  .chat_message {
+    @apply px-4 my-4 bg-blue-500;
+  }
 }

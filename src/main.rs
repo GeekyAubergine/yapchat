@@ -29,6 +29,7 @@ pub mod error;
 pub mod infrastructure;
 pub mod prelude;
 pub mod routes;
+pub mod domain;
 
 use prelude::*;
 
