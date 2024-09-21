@@ -1,0 +1,9 @@
+<div id="chat_panel" class="chat_messages">
+  <div
+    id="chat_message_list_ws"
+    hx-ext="ws"
+    ws-connect="/ws/{{ user_uuid }}"
+  ></div>
+  {% include "chat/chat_messages_list.html" %}
+  {% include "chat/chat_message_input.html" %}
+</div>

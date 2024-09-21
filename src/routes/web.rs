@@ -24,11 +24,13 @@ pub struct ChatTemplate {
     build_date: String,
     chats: Vec<Chat>,
     chat_messages: Vec<ChatMessage>,
+    chat_uuid: String,
+    user_uuid: String,
 }
 
 async fn get_chat_messages_for_chat(
     state: &AppState,
-    chat: Option<Chat>,
+    chat: &Option<Chat>,
 ) -> Result<Vec<ChatMessage>> {
     match chat {
         Some(chat) => {
@@ -51,7 +53,7 @@ async fn chat(State(state): State<AppState>, jar: CookieJar) -> ResponseResult<C
 
     let first_chat = chats.first().cloned();
 
-    let messages = get_chat_messages_for_chat(&state, first_chat).await?;
+    let messages = get_chat_messages_for_chat(&state, &first_chat).await?;
 
     Ok(ChatTemplate {
         page_title: "Chat".to_string(),
@@ -59,6 +61,8 @@ async fn chat(State(state): State<AppState>, jar: CookieJar) -> ResponseResult<C
         build_date: get_build_date(),
         chats,
         chat_messages: messages,
+        chat_uuid: first_chat.map(|c| c.uuid.to_string()).unwrap_or_default(),
+        user_uuid: user.uuid.to_string(),
     })
 }
 

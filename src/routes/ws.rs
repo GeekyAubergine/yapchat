@@ -16,6 +16,7 @@ use axum::{
 use axum_extra::{headers::UserAgent, TypedHeader};
 use futures::{stream::SplitSink, SinkExt, StreamExt};
 use tokio::sync::{Mutex, RwLock};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::infrastructure::appstate::AppState;
@@ -33,6 +34,7 @@ impl WsClients {
     }
 
     pub async fn add_client(&self, id: Uuid, ws: SplitSink<WebSocket, Message>) {
+        info!("Adding client: {:?}", id);
         self.clients.write().await.insert(id, ws);
     }
 
@@ -40,11 +42,12 @@ impl WsClients {
         self.clients.write().await.remove(&id);
     }
 
-    pub async fn send(&self, uuid: &Uuid, msg: Message) -> ControlFlow<()> {
+    pub async fn send(&self, uuid: &Uuid, msg: String) -> ControlFlow<()> {
         let mut clients = self.clients.write().await;
 
         if let Some(mut client) = clients.get_mut(&uuid) {
-            if client.send(msg).await.is_err() {
+        info!("Sending message to client: {:?}", uuid);
+            if client.send(Message::Text(msg)).await.is_err() {
                 self.clients.write().await.remove(&uuid);
                 return ControlFlow::Break(());
             }
@@ -53,7 +56,7 @@ impl WsClients {
         ControlFlow::Continue(())
     }
 
-    pub async fn broadcast(&self, msg: Message) {
+    pub async fn broadcast(&self, msg: String) {
         let clients = self.clients.read().await;
 
         for client in clients.keys() {
@@ -124,19 +127,13 @@ async fn handle_socket(mut socket: WebSocket, user_uuid: String, state: AppState
 
     let uuid = Uuid::from_str(&user_uuid).unwrap();
 
-    state
-        .ws_clients()
-        .add_client(uuid, sender)
-        .await;
+    state.ws_clients().add_client(uuid, sender).await;
 
     while let Some(msg) = reciever.next().await {
         let msg = if let Ok(msg) = msg {
             msg
         } else {
-            state
-                .ws_clients()
-                .remove_client(uuid)
-                .await;
+            state.ws_clients().remove_client(uuid).await;
             return;
         };
     }

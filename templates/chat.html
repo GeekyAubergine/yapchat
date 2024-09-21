@@ -1,28 +1,15 @@
-{% extends "partials/base.html" %}
+{% extends "partials/base.html" %} {%- block body %}
+<h1>Get yappin</h1>
 
-{%- block body %}
-   <h1>Get yappin</h1>
+<div class="chat_page">
+  <div class="chat_list">
+    <h2>Chats</h2>
+    {% include "partials/chat_list.html" %}
+  </div>
+  {% include "chat/chat_messages_panel.html" %}
+</div>
 
-   <div class="chat_page">
-       <div class="chat_list">
-           <h2>Chats</h2>
-           {% include "partials/chat_list.html" %}
-       </div>
-       <div id="active-chat" class="chat_messages">
-           {% include "partials/chat_messages_list.html" %}
-       </div>
-       <div hx-ext="ws" ws-connect="/ws">
-           <div id="notifications"></div>
-           <div id="chat_room">
-               ...
-           </div>
-           <form id="form" ws-send>
-               <input name="chat_message">
-           </form>
-       </div>
-   </div>
-
-   <!-- <script>
+<!-- <script>
    const socket = new WebSocket("ws://localhost:3000/ws");
 
    // Connection opened

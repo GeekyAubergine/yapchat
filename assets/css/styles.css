@@ -20,6 +20,10 @@
     @apply bg-background text-text;
   }
 
+  input {
+      @apply text-black;
+  }
+
   /* ---------------- Components ---------------- */
 
   .chat_page {

@@ -16,6 +16,26 @@ pub struct ChatMessage {
     // pub file_duration: f32,
 }
 
+impl ChatMessage {
+    pub fn from_chat_uuid_sender_uuid_file_uuid(
+        chat_uuid: Uuid,
+        sender_uuid: Uuid,
+        file_uuid: Uuid,
+    ) -> Self {
+        Self {
+            uuid: Uuid::new_v4(),
+            chat_uuid,
+            sender_uuid,
+            file_uuid,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+            chat_name: "".to_string(),
+            sender_name: "".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Chat {
     pub uuid: Uuid,

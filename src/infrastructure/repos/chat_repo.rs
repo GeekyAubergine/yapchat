@@ -117,7 +117,7 @@ impl ChatRepo {
             .collect())
     }
 
-    pub async fn commit_chat(&self, chat: Chat) -> Result<Option<Chat>> {
+    pub async fn commit(&self, chat: Chat) -> Result<Option<Chat>> {
         if let Some(_) = self.find_chat_by_uuid(chat.uuid).await? {
             sqlx::query!(
                 "

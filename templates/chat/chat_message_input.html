@@ -1,0 +1,10 @@
+<form
+  id="form"
+  hx-post="/api/chats/{{ chat_uuid }}/message"
+  hx-ext="json-enc"
+  hx-on::after-request="this.reset()"
+  hx-swap="none"
+>
+  <input name="message" hx-ext="json-enc" />
+  <button type="submit">Send</button>
+</form>
