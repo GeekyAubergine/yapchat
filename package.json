@@ -1,0 +1,42 @@
+{
+  "name": "yapchat",
+  "version": "1.0.0",
+  "description": "Yappin and Chattin",
+  "main": "index.js",
+  "repository": "git@github.com:GeekyAubergine/yapchat.git",
+  "author": "Zoe Aubert <hello@zoeaubert.me>",
+  "license": "MIT",
+  "private": true,
+  "hexo": {
+    "version": "3.8.0"
+  },
+  "scripts": {
+    "clean": "rm -rf _site && rm -rf .cache",
+    "build": "run-s build:*",
+    "start": "eleventy --serve",
+    "dev:css": "tailwindcss -i src/assets/css/styles.css -o _site/assets/css/tw.css --watch --postcss",
+    "build:11ty": "ENVIRONMENT=production eleventy",
+    "build:css": "ENVIRONMENT=production tailwindcss -i src/assets/css/styles.css -o _site/assets/css/tw.css --postcss && lightningcss --minify --bundle --targets '>= 0.25%' _site/assets/css/tw.css -o _site/assets/css/styles.css"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^2.0.1",
+    "@11ty/eleventy-plugin-rss": "^1.2.0",
+    "eleventy-plugin-time-to-read": "^1.3.0",
+    "markdown-it": "^13.0.1",
+    "markdown-it-prism": "^2.3.0",
+    "sass": "^1.57.1"
+  },
+  "devDependencies": {
+    "@emotion/styled": "^11.10.5",
+    "@tailwindcss/nesting": "^0.0.0-insiders.565cd3e",
+    "autoprefixer": "^10.4.13",
+    "lightningcss-cli": "^1.22.1",
+    "npm-run-all": "^4.1.5",
+    "pagefind": "^1.0.4",
+    "postcss": "^8.4.21",
+    "postcss-nesting": "^12.0.1",
+    "prettier": "^2.8.2",
+    "sass-lint": "^1.13.1",
+    "tailwindcss": "^3.2.4"
+  }
+}
