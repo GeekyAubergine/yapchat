@@ -10,19 +10,10 @@ pub struct ChatMessage {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
-}
 
-#[derive(Debug, Clone)]
-pub struct ChatMessageMetadata {
     pub chat_name: String,
     pub sender_name: String,
-    pub file_duration: f32,
-}
-
-#[derive(Debug, Clone)]
-pub struct ChatMessageWithMetadata {
-    pub chat_message: ChatMessage,
-    pub chat_message_metadata: ChatMessageMetadata,
+    // pub file_duration: f32,
 }
 
 #[derive(Debug, Clone)]
@@ -32,18 +23,9 @@ pub struct Chat {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
-}
 
-#[derive(Debug, Clone)]
-pub struct ChatMetadata {
-    pub last_message: Option<DateTime<Utc>>,
-    pub users_names: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ChatWithMetadata {
-    pub chat: Chat,
-    pub chat_metadata: ChatMetadata,
+    pub latest_message_created_at: Option<DateTime<Utc>>,
+    pub user_names: Vec<String>,
 }
 
 #[derive(Debug, Clone)]

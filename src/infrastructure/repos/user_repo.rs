@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{domain::models::User, error::DatabaseError, DatabaseConnection, Result};
 
+#[derive(Debug, Clone)]
 pub struct UsersRepo {
     database_connection: DatabaseConnection,
 }

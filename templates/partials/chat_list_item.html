@@ -1,0 +1,7 @@
+<div class="chat">
+  <p class="name">{{ chat.name }}</p>
+  <div class="users">{{ chat.user_names|join(", ") }}</div>
+  <time datetime="{{ chat.latest_message_created_at.datetime() }}"
+    >{{ chat.latest_message_created_at.short_iso() }}</time
+  >
+</div>

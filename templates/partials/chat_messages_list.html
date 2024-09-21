@@ -1,5 +1,3 @@
 {% for message in chat_messages %}
-  {% let user_name = message.user_name %}
-  {% let timestamp = message.timestamp %}
-    {% include 'chat_message.html' %}
+  {% include "partials/chat_message.html" %}
 {% endfor %}

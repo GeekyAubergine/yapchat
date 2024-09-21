@@ -1,4 +1,4 @@
 <div class="chat_message">
-    <p>{user_name}</p>
-    <p>{timestamp}</p>
+    <p>{{ message.sender_name }}</p>
+    <time datetime="{{ message.created_at.datetime() }}">{{ message.created_at.short_iso() }}</time>
 </div>

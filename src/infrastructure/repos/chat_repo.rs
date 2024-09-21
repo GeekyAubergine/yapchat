@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{domain::models::Chat, error::DatabaseError, prelude::*};
 
+#[derive(Debug, Clone)]
 pub struct ChatRepo {
     database_connection: DatabaseConnection,
 }
@@ -15,26 +16,30 @@ impl ChatRepo {
         }
     }
 
-    pub async fn find_all_chats(&self) -> Result<HashMap<Uuid, Chat>> {
-        let rows = sqlx::query_as!(
-            Chat,
-            "
-            SELECT *
-            FROM chats
-            "
-        )
-        .fetch_all(&self.database_connection)
-        .await
-        .map_err(DatabaseError::from_query_error)?;
-
-        Ok(rows.into_iter().map(|chat| (chat.uuid, chat)).collect())
-    }
-
     pub async fn find_chat_by_uuid(&self, uuid: Uuid) -> Result<Option<Chat>> {
-        let row = sqlx::query_as!(
-            Chat,
+        let row = sqlx::query!(
             "
-            SELECT *
+            SELECT
+            chats.uuid as uuid,
+            chats.name as name,
+            chats.created_at as created_at,
+            chats.updated_at as updated_at,
+            chats.deleted_at as deleted_at,
+            (
+                SELECT
+                created_at
+                FROM chat_messages
+                WHERE chat_uuid = chats.uuid
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) as latest_message_created_at,
+            array(
+                SELECT
+                users.user_name
+                FROM users
+                JOIN users_in_chat ON users_in_chat.user_uuid = users.uuid
+                WHERE users_in_chat.chat_uuid = chats.uuid
+            ) as user_names
             FROM chats
             WHERE uuid = $1
             ",
@@ -44,7 +49,72 @@ impl ChatRepo {
         .await
         .map_err(DatabaseError::from_query_error)?;
 
-        Ok(row)
+        match row {
+            None => return Ok(None),
+            Some(row) => {
+                return Ok(Some(Chat {
+                    uuid: row.uuid,
+                    name: row.name,
+                    created_at: row.created_at,
+                    updated_at: row.updated_at,
+                    deleted_at: row.deleted_at,
+                    latest_message_created_at: row.latest_message_created_at,
+                    user_names: match row.user_names {
+                        Some(user_names) => user_names,
+                        None => Vec::new(),
+                    },
+                }))
+            }
+        }
+    }
+
+    pub async fn find_all_ordered_by_latest_message(&self) -> Result<Vec<Chat>> {
+        let rows = sqlx::query!(
+            "
+            SELECT
+            chats.uuid as uuid,
+            chats.name as name,
+            chats.created_at as created_at,
+            chats.updated_at as updated_at,
+            chats.deleted_at as deleted_at,
+            (
+                SELECT
+                created_at
+                FROM chat_messages
+                WHERE chat_uuid = chats.uuid
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) as latest_message_created_at,
+            array(
+                SELECT
+                users.user_name
+                FROM users
+                JOIN users_in_chat ON users_in_chat.user_uuid = users.uuid
+                WHERE users_in_chat.chat_uuid = chats.uuid
+            ) as user_names
+            FROM chats
+            ORDER BY latest_message_created_at DESC
+            "
+        )
+        .fetch_all(&self.database_connection)
+        .await
+        .map_err(DatabaseError::from_query_error)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Chat {
+                uuid: row.uuid,
+                name: row.name,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+                deleted_at: row.deleted_at,
+                latest_message_created_at: row.latest_message_created_at,
+                user_names: match row.user_names {
+                    Some(user_names) => user_names,
+                    None => Vec::new(),
+                },
+            })
+            .collect())
     }
 
     pub async fn commit_chat(&self, chat: Chat) -> Result<Option<Chat>> {

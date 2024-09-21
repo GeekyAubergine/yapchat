@@ -15,7 +15,7 @@ use crate::{
 pub struct ChatQueryService;
 
 impl ChatQueryService {
-    async fn find_chat(
+    pub async fn find_chat(
         chat_repo: &ChatRepo,
         users_repo: &UsersRepo,
         chat_messages_repo: &ChatMessageRepo,
@@ -23,7 +23,7 @@ impl ChatQueryService {
         unimplemented!()
     }
 
-    async fn find_all_chats(
+    pub async fn find_all_chats_ordered_by_last_message(
         chat_repo: &ChatRepo,
         chat_messages_repo: &ChatMessageRepo,
         chat_users_repo: &ChatUsersRepo,
@@ -43,7 +43,7 @@ impl ChatQueryService {
                 chat_uuid.clone(),
                 ChatWithMetadata {
                     chat: chat.clone(),
-                    chat_metadata: ChatMetadata {
+                    metadata: ChatMetadata {
                         users_names: users.values().map(|user| user.user_name.clone()).collect(),
                         last_message: most_recent_message.map(|message| message.created_at.clone()),
                     },

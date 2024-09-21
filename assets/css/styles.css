@@ -23,15 +23,27 @@
   /* ---------------- Components ---------------- */
 
   .chat_page {
-      @apply flex flex-row w-full;
+    @apply flex flex-row w-full;
 
-      .chat_list {
+    .chat_list {
+      @apply flex-col items-start bg-red-500 h-full hidden md:flex md:w-[30%];
 
+      .chat {
+        @apply bg-pink-500 flex flex-col w-full p-2 border-b-border border-b-2 last:border-b-0;
+
+        .name {
+            @apply text-xl;
+        }
+
+        .timestamp {
+            @apply text-secondary;
+        }
       }
+    }
 
-      .chat_messages {
-
-      }
+    .chat_messages {
+      @apply flex flex-col w-full items-start bg-blue-500 h-full;
+    }
   }
 
   .chat_message {

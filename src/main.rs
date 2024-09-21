@@ -2,6 +2,8 @@
 
 use std::sync::Arc;
 
+use dotenvy_macro::dotenv;
+
 use axum::{
     body::Body,
     extract::Request,
@@ -13,8 +15,10 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use error::DatabaseError;
 use infrastructure::appstate::AppStateData;
 use routes::router;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, normalize_path::NormalizePathLayer, services::ServeDir};
 use tower_livereload::LiveReloadLayer;
@@ -25,11 +29,12 @@ use tracing::Level;
 #[macro_use]
 extern crate lazy_static;
 
+pub mod domain;
 pub mod error;
 pub mod infrastructure;
 pub mod prelude;
 pub mod routes;
-pub mod domain;
+pub mod utils;
 
 use prelude::*;
 
@@ -41,11 +46,21 @@ pub fn get_build_date() -> String {
     build_data::BUILD_DATE.to_string()
 }
 
+async fn prepare_database() -> Result<Pool<Postgres>> {
+    PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&dotenv!("DATABASE_URL"))
+        .await
+        .map_err(DatabaseError::from_connection_error)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
 
-    let mut state = AppStateData::new().await;
+    let database = (prepare_database().await?);
+
+    let mut state = AppStateData::new(database).await;
 
     let state = Arc::new(state);
 

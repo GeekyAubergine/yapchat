@@ -4,10 +4,12 @@
    <h1>Get yappin</h1>
 
    <div class="chat_page">
-       <div>
+       <div class="chat_list">
            <h2>Chats</h2>
+           {% include "partials/chat_list.html" %}
        </div>
-       <div>
+       <div id="active-chat" class="chat_messages">
+           {% include "partials/chat_messages_list.html" %}
        </div>
    </div>
 {% endblock %}
