@@ -16,7 +16,7 @@ impl UsersRepo {
         }
     }
 
-    async fn find_all_users(&self) -> Result<HashMap<Uuid, User>> {
+    pub async fn find_all_users(&self) -> Result<HashMap<Uuid, User>> {
         let rows = sqlx::query_as!(
             User,
             "
@@ -31,7 +31,24 @@ impl UsersRepo {
         Ok(rows.into_iter().map(|user| (user.uuid, user)).collect())
     }
 
-    async fn find_user_by_uuid(&self, uuid: Uuid) -> Result<Option<User>> {
+    pub async fn find_user_by_name(&self, user_name: &str) -> Result<Option<User>> {
+        let row = sqlx::query_as!(
+            User,
+            "
+            SELECT *
+            FROM users
+            WHERE user_name = $1
+            ",
+            user_name
+        )
+        .fetch_optional(&self.database_connection)
+        .await
+        .map_err(DatabaseError::from_query_error)?;
+
+        Ok(row)
+    }
+
+    pub async fn find_user_by_uuid(&self, uuid: &Uuid) -> Result<Option<User>> {
         let row = sqlx::query_as!(
             User,
             "
@@ -48,8 +65,8 @@ impl UsersRepo {
         Ok(row)
     }
 
-    async fn commit_user(&self, user: User) -> Result<Option<User>> {
-        if let Some(_) = self.find_user_by_uuid(user.uuid).await? {
+    pub async fn commit_user(&self, user: User) -> Result<Option<User>> {
+        if let Some(_) = self.find_user_by_uuid(&user.uuid).await? {
             sqlx::query!(
                 "
                 UPDATE users
@@ -64,7 +81,7 @@ impl UsersRepo {
             .await
             .map_err(DatabaseError::from_query_error)?;
 
-            return self.find_user_by_uuid(user.uuid).await;
+            return self.find_user_by_uuid(&user.uuid).await;
         }
 
         sqlx::query_as!(
@@ -81,6 +98,6 @@ impl UsersRepo {
         .await
         .map_err(DatabaseError::from_query_error)?;
 
-        self.find_user_by_uuid(user.uuid).await
+        self.find_user_by_uuid(&user.uuid).await
     }
 }

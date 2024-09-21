@@ -20,7 +20,12 @@ use infrastructure::appstate::AppStateData;
 use routes::router;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tower::ServiceBuilder;
-use tower_http::{cors::CorsLayer, normalize_path::NormalizePathLayer, services::ServeDir};
+use tower_http::{
+    cors::CorsLayer,
+    normalize_path::NormalizePathLayer,
+    services::ServeDir,
+    trace::{DefaultMakeSpan, TraceLayer},
+};
 use tower_livereload::LiveReloadLayer;
 use tracing::Level;
 // #![feature(duration_constructors)]
@@ -66,6 +71,7 @@ async fn main() -> Result<()> {
 
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_origin("ws://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_credentials(true)
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
@@ -82,7 +88,11 @@ async fn main() -> Result<()> {
         .with_state(state)
         .nest_service("/static", static_files)
         .nest_service("/assets", asset_files)
-        .layer(services);
+        .layer(services)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::default().include_headers(true)),
+        );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 

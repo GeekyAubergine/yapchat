@@ -36,3 +36,15 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
+
+impl User {
+    pub fn from_name(name: String) -> Self {
+        Self {
+            uuid: Uuid::new_v4(),
+            user_name: name,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        }
+    }
+}

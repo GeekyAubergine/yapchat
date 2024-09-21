@@ -1,0 +1,10 @@
+{% extends "partials/base.html" %} {%- block body %}
+<h1>Get yappin</h1>
+
+<div class="login_page">
+  <form id="login-form" hx-post="/api/login" hx-ext='json-enc'>
+    <input name="username" placeholder="Username" />
+    <button type="submit">Login</button>
+  </form>
+</div>
+{% endblock %}

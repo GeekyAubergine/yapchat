@@ -33,12 +33,19 @@ impl DatabaseError {
 pub enum Error {
     #[error("Database error: {0}")]
     DatabaseError(#[from] DatabaseError),
+
+    #[error("Not logged in")]
+    NotLoggedIn,
 }
 
 impl Error {
     pub fn into_response(self) -> ErrorResponse {
         match self {
             Error::DatabaseError(err) => err.into_response(),
+            Error::NotLoggedIn => ErrorResponse {
+                status: StatusCode::UNAUTHORIZED,
+                message: "Not logged in",
+            },
             _ => ErrorResponse {
                 status: StatusCode::INTERNAL_SERVER_ERROR,
                 message: "Internal Server Error",

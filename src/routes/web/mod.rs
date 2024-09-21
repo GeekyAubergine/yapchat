@@ -3,14 +3,17 @@ use axum::{
     extract::State, http::StatusCode, response::IntoResponse, routing::get, routing::post, Json,
     Router,
 };
+use axum_extra::extract::CookieJar;
 
 use crate::domain::models::{Chat, ChatMessage};
 use crate::prelude::*;
-use crate::utils::FormatDate;
+use crate::utils::{validate_user, FormatDate};
 use crate::{get_build_date, infrastructure::appstate::AppState, ResponseResult};
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/", get(chat))
+    Router::new()
+        .route("/", get(login))
+        .route("/chat", get(chat))
 }
 
 #[derive(Template)]
@@ -38,7 +41,9 @@ async fn get_chat_messages_for_chat(
     }
 }
 
-async fn chat(State(state): State<AppState>) -> ResponseResult<ChatTemplate> {
+async fn chat(State(state): State<AppState>, jar: CookieJar) -> ResponseResult<ChatTemplate> {
+    let user = validate_user(&state, jar).await?;
+
     let chats = state
         .chat_repo()
         .find_all_ordered_by_latest_message()
@@ -55,4 +60,20 @@ async fn chat(State(state): State<AppState>) -> ResponseResult<ChatTemplate> {
         chats,
         chat_messages: messages,
     })
+}
+
+#[derive(Template)]
+#[template(path = "login.html")]
+pub struct LoginTemplate {
+    page_title: String,
+    page_description: String,
+    build_date: String,
+}
+
+async fn login() -> impl IntoResponse {
+    LoginTemplate {
+        page_title: "Login".to_string(),
+        page_description: "Login to chat".to_string(),
+        build_date: get_build_date(),
+    }
 }

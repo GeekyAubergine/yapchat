@@ -11,5 +11,28 @@
        <div id="active-chat" class="chat_messages">
            {% include "partials/chat_messages_list.html" %}
        </div>
+       <div hx-ext="ws" ws-connect="/ws">
+           <div id="notifications"></div>
+           <div id="chat_room">
+               ...
+           </div>
+           <form id="form" ws-send>
+               <input name="chat_message">
+           </form>
+       </div>
    </div>
+
+   <!-- <script>
+   const socket = new WebSocket("ws://localhost:3000/ws");
+
+   // Connection opened
+   socket.addEventListener("open", (event) => {
+     socket.send("Hello Server!");
+   });
+
+   // Listen for messages
+   socket.addEventListener("message", (event) => {
+     console.log("Message from server ", event.data);
+   });
+   </script> -->
 {% endblock %}
