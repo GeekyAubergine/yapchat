@@ -83,11 +83,13 @@ async fn main() -> Result<()> {
 
     let asset_files = ServeDir::new("./_assets");
     let static_files = ServeDir::new("./static");
+    let cdn = ServeDir::new("./cdn");
 
     let app = router()
         .with_state(state)
         .nest_service("/static", static_files)
         .nest_service("/assets", asset_files)
+        .nest_service("/cdn", cdn)
         .layer(services)
         .layer(
             TraceLayer::new_for_http()

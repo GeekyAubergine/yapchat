@@ -1,5 +1,9 @@
+<div>
+    <p class="record">R</p>
+    <p class="stop">S</p>
+</div>
 <form
-  id="form"
+  id="chat_text_input"
   hx-post="/api/chats/{{ chat_uuid }}/message"
   hx-ext="json-enc"
   hx-on::after-request="this.reset()"

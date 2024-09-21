@@ -1,25 +1,18 @@
 {% extends "partials/base.html" %} {%- block body %}
-<h1>Get yappin</h1>
 
 <div class="chat_page">
   <div class="chat_list">
+    <h1>Get yappin</h1>
     <h2>Chats</h2>
     {% include "partials/chat_list.html" %}
   </div>
   {% include "chat/chat_messages_panel.html" %}
 </div>
 
-<!-- <script>
-   const socket = new WebSocket("ws://localhost:3000/ws");
-
-   // Connection opened
-   socket.addEventListener("open", (event) => {
-     socket.send("Hello Server!");
-   });
-
-   // Listen for messages
-   socket.addEventListener("message", (event) => {
-     console.log("Message from server ", event.data);
-   });
-   </script> -->
+<script>
+  window.setInterval(function () {
+    var elem = document.getElementById("chat_message_list");
+    elem.scrollTop = elem.scrollHeight;
+  }, 50);
+</script>
 {% endblock %}

@@ -29,3 +29,4 @@ node_modules
 _assets
 DS_Store
 .env
+cdn

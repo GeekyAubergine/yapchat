@@ -24,6 +24,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/login", post(login))
         .route("/chats/:chat_uuid/message", post(add_message))
+        .route("/chats/:chat_uuid/audio", post(add_audio))
 }
 
 #[derive(Deserialize)]
@@ -133,4 +134,47 @@ async fn add_message(
     Ok(ChatMessageInputTemplate {
         chat_uuid: chat_uuid.to_string(),
     })
+}
+
+#[derive(Deserialize)]
+struct ChatAudioPayload {
+    audio: Vec<u8>,
+}
+
+async fn add_audio(
+    State(state): State<AppState>,
+    Path(chat_uuid): Path<String>,
+    jar: CookieJar,
+    Json(payload): Json<ChatAudioPayload>,
+) -> ResponseResult<()> {
+    let user = validate_user(&state, jar).await?;
+
+    let chat_uuid = Uuid::parse_str(&chat_uuid).unwrap();
+
+    let message =
+        ChatMessage::from_chat_uuid_sender_uuid_file_uuid(chat_uuid, user.uuid, Uuid::new_v4());
+
+    let message = state.chat_message_repo().commit(message).await?.unwrap();
+
+    // let value = ChatMessageTemplate { message };
+
+    // let value = value.render().unwrap();
+
+    // state.ws_clients().send(&user.uuid, (value)).await;
+    info!("chat uuid {}", chat_uuid);
+
+    let chat_messages = state
+        .chat_message_repo()
+        .find_chat_messages_in_chat_ordered_by_created_at(&chat_uuid)
+        .await?;
+
+    info!("Chat messages {}", chat_messages.len());
+
+    let value = ChatMessageListTemplate { chat_messages };
+
+    let value = value.render().unwrap();
+
+    state.ws_clients().send(&user.uuid, (value)).await;
+
+    Ok(())
 }
