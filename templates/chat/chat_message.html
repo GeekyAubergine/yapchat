@@ -1,5 +1,5 @@
 <div class="chat_message" hx-swap-oob="beforeend#chat_message_list">
-    <p>{{ message.sender_name }}</p>
+    <p class="name">{{ message.sender_name }}</p>
     <audio controls>
         <source src="http://localhost:3000/cdn/{{ message.file_uuid }}.wav" type="audio/mpeg" />
         Your browser does not support the audio element.

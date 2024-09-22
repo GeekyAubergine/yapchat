@@ -9,8 +9,10 @@ use axum::{
     Router,
 };
 use axum_extra::extract::CookieJar;
+use dotenvy_macro::dotenv;
 use hound::WavWriter;
-use serde::Deserialize;
+use reqwest::ClientBuilder;
+use serde::{Deserialize, Serialize};
 use tokio_tungstenite::tungstenite::Message;
 use tracing::info;
 use uuid::Uuid;
@@ -128,6 +130,44 @@ async fn add_message(
 
     info!("Chat messages {}", chat_messages.len());
 
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        format!("Bearer {}", dotenv!("OPEN_AI_TOKEN").to_string())
+            .parse()
+            .unwrap(),
+    );
+
+    let rc = ClientBuilder::new()
+        .default_headers(headers)
+        .build()
+        .unwrap();
+
+    let response = rc
+        .post("https://api.openai.com/v1/audio/speech")
+        .json(&AIBody {
+            model: "tts-1".to_string(),
+            input: payload.message.to_string(),
+            voice: "alloy".to_string(),
+            response_format: "wav".to_string(),
+        })
+        .send()
+        .await
+        .unwrap();
+
+    info!("FileUUI {:?}", message.file_uuid);
+
+    info!("S {:?}", response.status());
+
+    let content = response.bytes().await.unwrap();
+
+    info!("Content length {}", content.len());
+
+    let path =
+        std::path::PathBuf::from("cdn/".to_string() + &message.file_uuid.to_string() + ".wav");
+
+    tokio::fs::write(path.as_path(), content).await.unwrap();
+
     let value = ChatMessageListTemplate { chat_messages };
 
     let value = value.render().unwrap();
@@ -142,6 +182,14 @@ async fn add_message(
 #[derive(Deserialize)]
 struct ChatAudioPayload {
     audio: Vec<u8>,
+}
+
+#[derive(Deserialize, Serialize)]
+struct AIBody {
+    model: String,
+    input: String,
+    voice: String,
+    response_format: String,
 }
 
 async fn add_audio(
@@ -161,38 +209,40 @@ async fn add_audio(
 
     let file_uuid = message.file_uuid;
 
-    let mut writer = WavWriter::create(
-        format!("cdn/{}.wav", file_uuid.to_string()),
-        hound::WavSpec {
-            channels: 1,
-            sample_rate: 44100,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        },
-    )
-    .unwrap();
+    // let request = request::Request::new(
+    //     "POST",
 
-    let data = payload.audio;
+    // let mut writer = WavWriter::create(
+    //     format!("cdn/{}.wav", file_uuid.to_string()),
+    //     hound::WavSpec {
+    //         channels: 1,
+    //         sample_rate: 44100,
+    //         bits_per_sample: 16,
+    //         sample_format: hound::SampleFormat::Int,
+    //     },
+    // )
+    // .unwrap();
 
-    let data = &data[88..data.len()];
+    // let data = payload.audio;
 
-    // Convert u8 array to i16 array
-    let normalised = data
-        .chunks(2)
-        .into_iter()
-        .map(|chunk| {
-            let mut bytes = [0u8; 2];
-            for (i, byte) in chunk.iter().enumerate() {
-                bytes[i] = *byte;
-            }
-            i16::from_le_bytes(bytes)
-        })
-        .collect::<Vec<i16>>();
+    // let data = &data[88..data.len()];
 
+    // // Convert u8 array to i16 array
+    // let normalised = data
+    //     .chunks(2)
+    //     .into_iter()
+    //     .map(|chunk| {
+    //         let mut bytes = [0u8; 2];
+    //         for (i, byte) in chunk.iter().enumerate() {
+    //             bytes[i] = *byte;
+    //         }
+    //         i16::from_le_bytes(bytes)
+    //     })
+    //     .collect::<Vec<i16>>();
 
-    for sample in normalised {
-        writer.write_sample(sample).unwrap();
-    }
+    // for sample in normalised {
+    //     writer.write_sample(sample).unwrap();
+    // }
 
     info!("Audio written");
 

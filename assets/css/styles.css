@@ -30,7 +30,7 @@
     @apply flex flex-row w-full;
 
     .chat_list {
-      @apply flex-col items-start bg-red-500 h-full hidden md:flex md:w-[30%];
+      @apply flex-col items-start h-full hidden md:flex md:w-[30%];
 
       .chat {
         @apply bg-pink-500 flex flex-col w-full p-2 border-b-border border-b-2 last:border-b-0;
@@ -46,18 +46,22 @@
     }
 
     #chat_panel {
-      @apply flex flex-col w-full items-start bg-blue-500 h-screen max-h-screen;
+      @apply flex flex-col w-full items-start h-screen max-h-screen;
 
       .chat_message_list {
-        @apply flex flex-1 flex-col overflow-y-scroll w-full;
+        @apply flex flex-1 flex-col overflow-y-scroll w-full text-black;
 
         .chat_message {
-          @apply px-4 my-4 bg-blue-500;
+          @apply px-4 my-1 bg-[#F1F3F4];
+
+          .name {
+              @apply text-2xl;
+          }
         }
       }
 
       #chat_text_input {
-        @apply p-4 bg-purple-500;
+        @apply p-4 bg-gray-900 w-full;
       }
     }
   }
